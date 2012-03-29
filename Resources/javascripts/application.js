@@ -23,6 +23,38 @@ var Application = {
 	currentTaskTimer : null,
 	timerPanel : null,
 	lastClickedTime: null,
+	
+	Database: {
+		Utils: {
+			createDatabaseIfNotExists : function (dbName) {
+				//var db = Titanium.Database.open("PT_TIMER");
+			},
+			
+			createIfNotExists: function(tableName) {
+				
+			
+			},
+			 	
+		},
+		
+		PTUser: function(userName, password, ptId) {
+			this.tableName = 'pt_users';
+			this.ptId = ptId;
+			this.userName = userName,
+			this.password = password;
+			
+			this.save = function() {
+				// TODO: Insert into SQL lite
+			}
+			
+		},
+		
+		PTUserUtils: {
+			getSystemUser: function() {
+				// Ti.Data.query(...)
+			}
+		}
+	},
 
 	Events : {
 		handleSaveSettings : function(e) {
@@ -93,7 +125,8 @@ var Application = {
 	},
 
 	loadExistingSettings : function() {
-
+		// TODO Load user from database 
+		// If user doesn't exist on local database show login form
 	},
 
 	showNotice : function(notice) {
