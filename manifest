@@ -1,17 +1,16 @@
-#appname: PivotalTrackerTimeKeeper
-#publisher: bijon
-#url: http://www.somewherein.net
-#image: default_app_logo.png
-#appid: com.somewherein.titanium.PTTracker
-#desc: undefined
-#type: desktop
-#guid: dad6ca10-4305-47b0-b4be-d47a48813678
+#appname:PivotalTrackerTimeKeeper
+#publisher:bijon
+#url:http://www.somewherein.net
+#image:default_app_logo.png
+#appid:com.somewherein.titanium.PTTKeeper
+#desc:not specified
+#type:desktop
+#guid:dad6ca10-4305-47b0-b4be-d47a48813678
 runtime:1.1.0
 tiapp:1.1.0
 tifilesystem:1.1.0
 tiplatform:1.1.0
 tiui:1.1.0
-ruby:1.1.0
 ticodec:1.1.0
 tidatabase:1.1.0
 timedia:1.1.0

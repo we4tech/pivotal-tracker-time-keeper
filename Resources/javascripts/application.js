@@ -1,22 +1,6 @@
-//pads left
-// Taken from http://sajjadhossain.com/2008/10/31/javascript-string-trimming-and-padding/
-String.prototype.lpad = function(padString, length) {
-	var str = this;
-	while(str.length < length)
-		str = padString + str;
-	return str;
-}
-//pads right
-String.prototype.rpad = function(padString, length) {
-	var str = this;
-	while(str.length < length)
-		str = str + padString;
-	return str;
-}
-
 var Application = {
 	ptSettings : {},
-	currentTaskId : null,
+	currentStoryId : null,
 	currentProjectId : null,
 	currentUserId : null,
 	currentTaskStartedAt : null,
@@ -24,98 +8,71 @@ var Application = {
 	timerPanel : null,
 	lastClickedTime: null,
 	
-	Database: {
-		Utils: {
-			createDatabaseIfNotExists : function (dbName) {
-				//var db = Titanium.Database.open("PT_TIMER");
-			},
-			
-			createIfNotExists: function(tableName) {
-				
-			
-			},
-			 	
-		},
-		
-		PTUser: function(userName, password, ptId) {
-			this.tableName = 'pt_users';
-			this.ptId = ptId;
-			this.userName = userName,
-			this.password = password;
-			
-			this.save = function() {
-				// TODO: Insert into SQL lite
-			}
-			
-		},
-		
-		PTUserUtils: {
-			getSystemUser: function() {
-				// Ti.Data.query(...)
-			}
-		}
-	},
-
-	Events : {
-		handleSaveSettings : function(e) {
-			var username = $('#settings_username').val();
-			var password = $('#settings_password').val();
-
-			if ((username && username.length > 0) && (password && password.length > 0)) {
-				Application.ptSettings['username'] = username;
-				Application.ptSettings['password'] = password;
-				$.mobile.changePage("#home_page");
-			} else {
-				Application.showNotice('Please enter user name and password');
-			}
-
-			return false;
-		},
-
-		handleStartOrStopTimer : function(e) {
-			if (Application.currentTaskTimer == null) {
-				if ((Application.lastClickedTime && 
-					(new Date().getTime() - Application.lastClickedTime.getTime()) > 1000) || 
-					(Application.lastClickedTime == null && Application.currentTaskTimer == null)) {
-					if (Application.currentTaskStartedAt == null)
-						Application.currentTaskStartedAt = new Date();
-					Application.currentTaskTimer = setInterval(Application.Events.handleTimerTick, 1000);
-					$('#btn_start_timer').removeClass('ui-btn-up-b').addClass('ui-btn-up-e').find('.ui-btn-text').text('Stop');
-				}
-			} else {
-				if (Application.lastClickedTime && (new Date().getTime() - Application.lastClickedTime.getTime()) > 1000) {
-					clearInterval(Application.currentTaskTimer);
-					Application.currentTaskTimer = null;
-					$('#btn_start_timer').removeClass('ui-btn-up-e').addClass('ui-btn-up-b').find('.ui-btn-text').text('Start');
-				}
-			}
-			
-			Application.lastClickedTime = new Date();
-		},
-
-		handleTimerTick : function() {
-			if (Application.timerPanel == null) {
-				Application.timerPanel = $('#timer_panel');
-			}
-
-			var diffDate = new Date((new Date().getTime() - Application.currentTaskStartedAt.getTime()) + (Application.currentTaskStartedAt.getTimezoneOffset() * 60 * 1000));
-
-			formattedDate = [diffDate.getHours().toString().lpad('0', 2), 
-							 diffDate.getMinutes().toString().lpad('0', 2), 
-							 diffDate.getSeconds().toString().lpad('0', 2)]
-							 .join(':');
-			Application.timerPanel.html(formattedDate);
-		}
-	},
-
 	init : function() {
 		Application.loadExistingSettings();
 		Application.addEvents()
+		Application.loadStates();
+		Application.determineFirstPage();
+	},
+	
+	loadStates: function() {
+		var html = [];
+		for (var i = 0; i < Application.PTApi.STATES.length; i++) {
+			var state = Application.PTApi.STATES[i];
+			html.push("<option value='" + state + "'>" + state + "</option>");
+		}
+		$('#states').html(html.join(' '));
+	},
+	
+	loadDetailsPage: function() {
+		Application.showNotice('Authenticating...');
+		
+		Application.PTApi.getUserToken(function(status, tokenRef) {
+			if (status) {
+				Application.debug("User token found - " + tokenRef.guid);
+				Application.showNotice('Loading projects...');
+				Application.PTApi.getProjects(function(status, projects) {
+					if (status) {
+						Application.hideNotice();
+						Application.loadProjects(projects);
+						$.mobile.changePage("#home_page");
+					} else {
+						Application.showNotice(projects);
+					}	
+				});				
+			} else {
+				if (Application.PTApi.AUT_REF == null)
+					Application.showNotice('Please enter valid user & password.');
+			}	
+		});
+	},
+	
+	loadProjects: function(projects) {
+		var projectEl = $('#projects');
+		var html = [];
+		html.push("<option>Select Project</option>");
+		
+		for (var i = 0; i < projects.length; i++) {
+			var project = projects[i];			
+			html.push("<option value='" + project.id + "'>" + 
+					  project.name + " ( " + project.account + ")" + "</option>");
+		}
+		projectEl.html(html.join(' '));
+	},
+	
+	determineFirstPage: function() {
+		if (Application.ptSettings.username != null && Application.ptSettings.password != null) {
+			$('#settings_username').val(Application.ptSettings.username);
+			$('#settings_password').val(Application.ptSettings.password);
+			Application.loadDetailsPage();
+		}
 	},
 
 	addEvents : function() {
 		$('#btn_start_timer').click(Application.Events.handleStartOrStopTimer);
 		$('#btn_save_settings').click(Application.Events.handleSaveSettings);
+		$('#projects').bind('change', Application.Events.handleProjectSelection);
+		$('#stories').bind('change', Application.Events.handleStorySelection);
 	},
 
 	debug : function(msg) {
@@ -125,12 +82,16 @@ var Application = {
 	},
 
 	loadExistingSettings : function() {
-		// TODO Load user from database 
-		// If user doesn't exist on local database show login form
+		Application.Database.PTUserUtils.loadSystemUser();
 	},
 
 	showNotice : function(notice) {
-		$('#status_message').html(notice).parent().show();
+		$.mobile.loadingMessage = notice;
+		$.mobile.showPageLoadingMsg()
+	},
+	
+	hideNotice: function() {
+		$.mobile.hidePageLoadingMsg();
 	}
 };
 

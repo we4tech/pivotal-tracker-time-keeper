@@ -4,7 +4,12 @@
 		<link type="text/css" href="stylesheets/style.css" rel="Stylesheet" />	
 		<script type="text/javascript" src="javascripts/jquery-mobile/jquery-1.7.1.min.js"></script>
 		<script type="text/javascript" src="javascripts/jquery-mobile/jquery.mobile-1.0.1.js"></script>
+		<script type="text/javascript" src="javascripts/core_ext.js"></script>
 		<script type="text/javascript" src="javascripts/application.js"></script>
+		<script type="text/javascript" src="javascripts/events.js"></script>
+		<script type="text/javascript" src="javascripts/pt_api.js"></script>
+		<script type="text/javascript" src="javascripts/database.js"></script>
+		
 		<title>PivotalTracker - Time Keeper</title>
 	</head>
 	
@@ -14,12 +19,7 @@
 				<h1>Login to Pivotal Tracker</h1>
 				<a href='#' onclick="window.reload();">Refresh</a>
 			</div> 
-			<div class='ui-bar ui-bar-e' id='status' style="display:none;">
-				<h3 id='status_message'>
-					Please enter user name and password.
-					<a href="javascript:$('#status').hide();" data-role='button' data-icon='delete'>Hide</a>
-				</h3>				
-			</div>
+			
 			<div data-role="content">
 				<h3>Configure <acronym title="Pivotal Tracker">PT</acronym> Credentials</h3>
 				<ul data-role='listview' data-theme='b' data-inset='true'>
@@ -30,7 +30,7 @@
 						<input type='password' placeholder="Password" id='settings_password' name="password" data-mini="true" />
 					</li>
 					<li>
-						<input type='button' value="Save" data-mini="true" id='btn_save_settings'/>
+						<input type='button' value="Save and Login" data-mini="true" id='btn_save_settings'/>
 					</li>
 				</ul>
 			</div> 
@@ -44,16 +44,22 @@
 		<div data-role='page' id='home_page' data-transitions='fade'>
 			<div data-role='header'>
 				<h1>Time Keeper</h1>
+				<!--a href='#' data-role='button' data-icon='grid'>Timelogs</a-->
 				<a href='#settings_page' data-role='button' data-icon='gear'>Settings</a>
-				<a href='#' data-role='button' data-icon='grid'>Timelogs</a>
+			</div>
+			<div class='ui-bar ui-bar-b'>
+				<h3 id='sync_status'>
+					Not yet sync with server.
+				</h3>				
 			</div>
 			<div data-role='content'>
 				<select id='projects'>
-					<option value=''>EasyStream</option>
+					<option value=''>Loading projects...</option>
 				</select>
-				<select id='tasks'>
-					<option value=''>Do this and that bla bal</option>
+				<select id='stories'>
+					<option value=''>Select project</option>
 				</select>
+				<div id="current-story"></div>
 				
 				<div class='timer' id="timer_panel" data-corner='round'>
 					00:00:00
@@ -61,7 +67,9 @@
 				
 				<fieldset class="ui-grid-a">
 					<div class="ui-block-a">
-						<a href='javascript:void(0);' data-role='button' data-theme="c">Save</a>
+						<select id='states'>
+							<option>Not loaded...</option>
+						</select>
 					</div>
 					<div class="ui-block-b">
 						<a href='javascript:void(0);' data-role='button' data-theme="b" id='btn_start_timer'>Start</a>
