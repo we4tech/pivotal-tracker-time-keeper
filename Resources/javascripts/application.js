@@ -64,8 +64,12 @@ var Application = {
 		if (Application.ptSettings.username != null && Application.ptSettings.password != null) {
 			$('#settings_username').val(Application.ptSettings.username);
 			$('#settings_password').val(Application.ptSettings.password);
+			// show back button 
+			$('#btn_back_page').show();
 			Application.loadDetailsPage();
 		}
+		// hide back button 
+		$('#btn_back_page').hide();
 	},
 
 	addEvents : function() {
@@ -73,6 +77,7 @@ var Application = {
 		$('#btn_save_settings').click(Application.Events.handleSaveSettings);
 		$('#projects').bind('change', Application.Events.handleProjectSelection);
 		$('#stories').bind('change', Application.Events.handleStorySelection);
+		$('#btn_back_page').click(Application.Events.goBackPage);
 	},
 
 	debug : function(msg) {

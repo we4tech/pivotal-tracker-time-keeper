@@ -15,14 +15,16 @@ Application['Database'] = {
 		loadSystemUser : function() {
 			var dataDir = Titanium.Filesystem.getApplicationDataDirectory();
 			var configFile = Titanium.Filesystem.getFile(dataDir, '.active-user');
-
-			var content = configFile.read();
-			var config = {};
-
-			if(content != null && content.length > 0) {
-				var parts = content.split('|');
-				Application.ptSettings.username = parts[0];
-				Application.ptSettings.password = parts[1];
+			
+			if (configFile.exists()) {
+				var content = configFile.read();
+				var config = {};
+	
+				if(content != null && content.length > 0) {
+					var parts = content.split('|');
+					Application.ptSettings.username = parts[0];
+					Application.ptSettings.password = parts[1];
+				}
 			}
 		}
 	}

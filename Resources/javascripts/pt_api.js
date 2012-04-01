@@ -86,6 +86,7 @@ Application['PTApi'] = {
 	
 	syncOnServer: function(hoursMinSecStr, callback) {
 		Application.debug('Syncing time log on server.');
+		alert(Application.PTApi.AUT_REF.id);
 		try {
 			var labels = [];
 			if (Application.currentElementRef != null) {

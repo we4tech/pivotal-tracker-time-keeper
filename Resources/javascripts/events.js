@@ -30,7 +30,7 @@ Application['Events'] = {
 					
 				if(Application.currentTaskStartedAt == null)
 					Application.currentTaskStartedAt = new Date();
-				Application.currentTaskTimer = setInterval(Application.Events.handleTimerTick, 1000);
+					Application.currentTaskTimer = setInterval(Application.Events.handleTimerTick, 1000);
 				$('#btn_start_timer').removeClass('ui-btn-up-b').addClass('ui-btn-up-e').find('.ui-btn-text').text('Stop');
 			}
 		} else {
@@ -43,6 +43,7 @@ Application['Events'] = {
 	},
 	
 	stopSyncTimer: function() {
+		
 		if (Application.currentTaskTimer != null)
 			clearInterval(Application.currentTaskTimer);
 			
@@ -70,6 +71,7 @@ Application['Events'] = {
 	},
 	
 	syncOnServer: function(nowDiff, formattedDate) {
+		
 		if (Application.Events.lastSync != null) {
 			var diff = nowDiff.getTime() - Application.Events.lastSync.getTime();
 			if (Application.currentProjectId != null && Application.currentStoryId !=null && diff > 10000) {
@@ -89,6 +91,8 @@ Application['Events'] = {
 		var $stories = $('#stories');
 		$stories.html('<option>Loading Stories...</option>');
 		$stories.selectmenu('refresh');
+		
+		//$('#sync_status').html('Not yet sync with server.' );
 		
 		Application.showNotice('Loading Stories...');
 		Application.PTApi.getStories(function(status, stories) {
@@ -125,14 +129,18 @@ Application['Events'] = {
 	
 	handleStorySelection: function(e) {
 		try {
+			$('#sync_status').html('Not yet sync with server.' );
+			
 			var $option = $(e.target.getElementsByTagName('option')[this.selectedIndex]);
 			var index = Application.PTApi.STATES.indexOf($option.attr('pt_current_state'));
 			var labels = $option.attr('pt_labels').toString().split(',');
 			
-			Application.currentTaskStartedAt = null;
+			//Application.currentTaskStartedAt = null;
+			Application.currentTaskStartedAt = new Date(new Date().getTime());
 			Application.currentProjectId = $option.attr('pt_project_id');
 			Application.currentStoryId = $option.attr('value');
 			Application.currentElementRef = $option;			
+			
 			
 			if (labels.length > 0) {
 				for (var i = 0; i < labels.length; i++) {
@@ -149,6 +157,7 @@ Application['Events'] = {
 				}	
 			}
 			
+			
 			// Stop currently running timer
 			Application.Events.stopSyncTimer();
 			
@@ -164,6 +173,11 @@ Application['Events'] = {
 		}
 	},
 	
+	goBackPage : function (e)
+	{
+		$.mobile.changePage("#home_page");
+			
+	},
 	_groupStoriesByState: function(stories) {
 		var stateMap = {};
 		for (var i = 0; i < stories.length; i++) {
