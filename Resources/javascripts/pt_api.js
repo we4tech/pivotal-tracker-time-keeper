@@ -94,6 +94,8 @@ Application['PTApi'] = {
 					existingLabels = lblStr.split(',');
 				}
 				
+				alert(Application.PTApi.AUT_REF.id);
+				
 				// remove existing TL: prefixed label
 				for (var i = 0; i < existingLabels.length; i++) {
 					var lbl = existingLabels[i];
@@ -154,6 +156,10 @@ Application['PTApi'] = {
 			if (e.readyState == e.DONE) {
 				callback(e);	
 			}
+		}
+		
+		client.onerror = function(e) {
+			alert('x');
 		}
 		
 		client.open((httpMethod || 'GET'), Application.PTApi.URI + method, true, 

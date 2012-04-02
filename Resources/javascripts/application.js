@@ -84,10 +84,19 @@ var Application = {
 	loadExistingSettings : function() {
 		Application.Database.PTUserUtils.loadSystemUser();
 	},
-
+	
+	noticeTimer: null,
+	
 	showNotice : function(notice) {
 		$.mobile.loadingMessage = notice;
-		$.mobile.showPageLoadingMsg()
+		$.mobile.showPageLoadingMsg();
+		
+		if (Application.noticeTimer != null)
+			clearTimeout(Application.noticeTimer);
+			
+		Application.noticeTimer = setTimeout(function() {
+			$.mobile.hidePageLoadingMsg();
+		}, 10000);
 	},
 	
 	hideNotice: function() {

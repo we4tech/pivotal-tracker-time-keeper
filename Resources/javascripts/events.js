@@ -55,16 +55,16 @@ Application['Events'] = {
 	},
 	
 	handleTimerTick : function() {
-		if(Application.timerPanel == null) {
+		if (Application.timerPanel == null) {
 			Application.timerPanel = $('#timer_panel');
 		}
-
+		
 		var diffDate = new Date((new Date().getTime() - Application.currentTaskStartedAt.getTime()) + (Application.currentTaskStartedAt.getTimezoneOffset() * 60 * 1000));
 		formattedDate = [diffDate.getHours().toString().lpad('0', 2), diffDate.getMinutes().toString().lpad('0', 2), diffDate.getSeconds().toString().lpad('0', 2)].join(':');
 		Application.timerPanel.html(formattedDate);
 		
 		Application.Events.syncOnServer(diffDate, formattedDate);
-		
+				
 		if (Application.Events.lastSync == null)
 			Application.Events.lastSync = diffDate;
 	},
@@ -72,7 +72,7 @@ Application['Events'] = {
 	syncOnServer: function(nowDiff, formattedDate) {
 		if (Application.Events.lastSync != null) {
 			var diff = nowDiff.getTime() - Application.Events.lastSync.getTime();
-			if (Application.currentProjectId != null && Application.currentStoryId !=null && diff > 10000) {
+			if (Application.currentProjectId != null && Application.currentStoryId !=null && diff > (10 * 60 * 1000)) {
 				Application.Events.lastSync = nowDiff;
 				Application.PTApi.syncOnServer(formattedDate, function(status, msg) {
 					var now = new Date();
@@ -148,6 +148,9 @@ Application['Events'] = {
 					}
 				}	
 			}
+			
+			// Change status text
+			$('#sync_status').html('Not yet sync with server.');
 			
 			// Stop currently running timer
 			Application.Events.stopSyncTimer();
