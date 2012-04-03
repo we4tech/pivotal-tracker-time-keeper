@@ -34,9 +34,14 @@ Application['PTApi'] = {
 			Application.PTApi._call('projects', function(e) {
 				var doc = new DOMParser().parseFromString(e.responseText, 'text/xml');
 				var projectsEle = doc.documentElement.getElementsByTagName('project');
+				
 				if (projectsEle && projectsEle.length > 0) {
 					var projects = [];
 					var projectEle;
+					var memberships;
+					var membershipEle;
+					var person;
+					Application.ptSettings.userinitials = null;
 					
 					for (var i = 0; i < projectsEle.length; i++) {
 						projectEle = projectsEle[i];
@@ -45,7 +50,18 @@ Application['PTApi'] = {
 						projectRef.account = projectEle.getElementsByTagName('account')[0].textContent;
 						projectRef.id = projectEle.getElementsByTagName('id')[0].textContent;
 						
-						projects.push(projectRef);
+						memberships = projectEle.getElementsByTagName('memberships');
+						
+						membershipEle = memberships[0].getElementsByTagName('membership');
+						for (var j = 0; j < membershipEle.length; j++) {
+							membership = membershipEle[i]
+							person = membership.getElementsByTagName('person')[0];
+								
+							if(person.getElementsByTagName('email')[0].textContent == Application.ptSettings.username)
+								Application.ptSettings.userinitials = person.getElementsByTagName('initials')[0].textContent 
+						}
+						
+						projects.push(projectRef);						
 					}
 					callback(true, projects);
 				} else {
@@ -106,7 +122,14 @@ Application['PTApi'] = {
 				Application.debug(labels);
 			}
 			
-			labels.push('Spent: ' + hoursMinSecStr);
+			var user_identifier = null; 
+			
+			if(Application.ptSettings.userinitials)
+				 user_identifier = Application.ptSettings.userinitials;
+			else
+				 user_identifier = Application.PTApi.AUT_REF.id;
+			
+			labels.push(user_identifier +' - Spent: ' + hoursMinSecStr);
 			Application.debug(labels);
 			
 			Application.PTApi._call('projects/' + Application.currentProjectId + 
@@ -139,7 +162,7 @@ Application['PTApi'] = {
 	
 	_call: function(method, callback, httpMethod, headers, body) {
 		var client = Titanium.Network.createHTTPClient();
-		client.setTimeout(5000);
+		client.setTimeout(60000);
 		
 		if (Application.PTApi.AUT_REF != null) {
 			client.setRequestHeader('X-TrackerToken', Application.PTApi.AUT_REF.guid);
@@ -159,7 +182,7 @@ Application['PTApi'] = {
 		}
 		
 		client.onerror = function(e) {
-			alert('x');
+			return null;
 		}
 		
 		client.open((httpMethod || 'GET'), Application.PTApi.URI + method, true, 
