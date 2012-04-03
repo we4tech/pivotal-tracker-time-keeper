@@ -17,7 +17,7 @@
 		<div data-role='page' id='settings_page' data-transitions='fade'>
 			<div data-role="header">
 				<h1>Login to Pivotal Tracker</h1>
-				<a href='#' onclick="window.reload();">Refresh</a>
+				<a href='javascript:void(0);' data-rel="back" data-role='button' data-icon='back'>Back</a>
 			</div> 
 			
 			<div data-role="content">
@@ -44,14 +44,15 @@
 		<div data-role='page' id='home_page' data-transitions='fade'>
 			<div data-role='header'>
 				<h1>Time Keeper</h1>
-				<!--a href='#' data-role='button' data-icon='grid'>Timelogs</a-->
 				<a href='#settings_page' data-role='button' data-icon='gear'>Settings</a>
+				<a href='#refresh_page' data-role='button' data-icon='refresh'>Refresh</a>
 			</div>
 			<div class='ui-bar ui-bar-b'>
 				<h3 id='sync_status'>
 					Not yet sync with server.
-				</h3>				
+				</h3>
 			</div>
+			
 			<div data-role='content'>
 				<select id='projects'>
 					<option value=''>Loading projects...</option>
@@ -66,15 +67,18 @@
 				</div>
 				
 				<fieldset class="ui-grid-a">
-					<div class="ui-block-a">
-						<select id='states'>
-							<option>Not loaded...</option>
-						</select>
-					</div>
+          <div class='ui-block-a'>
+            <a href='javascript:void(0);' data-role='button' data-theme='a' id='btn_sync'>Sync</a>
+          </div>
 					<div class="ui-block-b">
 						<a href='javascript:void(0);' data-role='button' data-theme="b" id='btn_start_timer'>Start</a>
 					</div>	   
 				</fieldset>
+
+        <select id='states'>
+          <option>Not loaded...</option>
+        </select>
+
 			</div>
 			
 			<div data-role='footer' data-position="fixed">
