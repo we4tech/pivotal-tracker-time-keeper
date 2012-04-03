@@ -41,7 +41,7 @@ Application['PTApi'] = {
 					var memberships;
 					var membershipEle;
 					var person;
-					Application.ptSettings.userinitials = null;
+					Application.ptSettings.userInitials = null;
 					
 					for (var i = 0; i < projectsEle.length; i++) {
 						projectEle = projectsEle[i];
@@ -54,11 +54,11 @@ Application['PTApi'] = {
 						
 						membershipEle = memberships[0].getElementsByTagName('membership');
 						for (var j = 0; j < membershipEle.length; j++) {
-							membership = membershipEle[i]
+							membership = membershipEle[j]
 							person = membership.getElementsByTagName('person')[0];
 								
 							if(person.getElementsByTagName('email')[0].textContent == Application.ptSettings.username)
-								Application.ptSettings.userinitials = person.getElementsByTagName('initials')[0].textContent 
+								Application.ptSettings.userInitials = person.getElementsByTagName('initials')[0].textContent
 						}
 						
 						projects.push(projectRef);						
@@ -103,33 +103,33 @@ Application['PTApi'] = {
 	syncOnServer: function(hoursMinSecStr, callback) {
 		Application.debug('Syncing time log on server.');
 		try {
+      var userIdentifier = null;
+
+      if (Application.ptSettings.userInitials)
+         userIdentifier = Application.ptSettings.userInitials;
+      else
+         userIdentifier = Application.PTApi.AUT_REF.id;
+
 			var labels = [];
 			if (Application.currentElementRef != null) {
-				var lblStr = Application.currentElementRef.attr('pt_labels');
+				var lblStr = decodeURI(Application.currentElementRef.attr('pt_labels'));
 				if (lblStr != null) {
 					existingLabels = lblStr.split(',');
 				}
 				
-				alert(Application.PTApi.AUT_REF.id);
-				
 				// remove existing TL: prefixed label
 				for (var i = 0; i < existingLabels.length; i++) {
 					var lbl = existingLabels[i];
-					if (lbl != null && lbl.length > 0 && !lbl.match(/^Spent:/i) && !lbl.match(/^undefined/))
+          Application.debug('Label - ' + lbl);
+					if (lbl != null && lbl.length > 0 &&
+              !lbl.toLowerCase().match('^' + userIdentifier + ' spent:') &&
+              !lbl.match(/^undefined/))
 						labels.push(lbl);
-						
 				}
 				Application.debug(labels);
 			}
 			
-			var user_identifier = null; 
-			
-			if(Application.ptSettings.userinitials)
-				 user_identifier = Application.ptSettings.userinitials;
-			else
-				 user_identifier = Application.PTApi.AUT_REF.id;
-			
-			labels.push(user_identifier +' - Spent: ' + hoursMinSecStr);
+			labels.push(userIdentifier.trim() + ' spent: ' + hoursMinSecStr);
 			Application.debug(labels);
 			
 			Application.PTApi._call('projects/' + Application.currentProjectId + 
