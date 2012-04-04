@@ -1,4 +1,4 @@
-Application['PTApi'] = {
+Application.PTApi = {
 	URI : 'https://www.pivotaltracker.com/services/v3/',
 	AUT_REF: null,
 	ACTIVE_PROJECT_ID: null,
@@ -38,30 +38,18 @@ Application['PTApi'] = {
 				if (projectsEle && projectsEle.length > 0) {
 					var projects = [];
 					var projectEle;
-					var memberships;
-					var membershipEle;
-					var person;
-					Application.ptSettings.userInitials = null;
-					
+
 					for (var i = 0; i < projectsEle.length; i++) {
 						projectEle = projectsEle[i];
 						var projectRef = {};
-						projectRef.name = projectEle.getElementsByTagName('name')[0].textContent;
-						projectRef.account = projectEle.getElementsByTagName('account')[0].textContent;
-						projectRef.id = projectEle.getElementsByTagName('id')[0].textContent;
+						projectRef.name = projectEle.
+                getElementsByTagName('name')[0].textContent;
+						projectRef.account = projectEle.
+                getElementsByTagName('account')[0].textContent;
+						projectRef.id = projectEle.
+                getElementsByTagName('id')[0].textContent;
 						
-						memberships = projectEle.getElementsByTagName('memberships');
-						
-						membershipEle = memberships[0].getElementsByTagName('membership');
-						for (var j = 0; j < membershipEle.length; j++) {
-							membership = membershipEle[j]
-							person = membership.getElementsByTagName('person')[0];
-								
-							if(person.getElementsByTagName('email')[0].textContent == Application.ptSettings.username)
-								Application.ptSettings.userInitials = person.getElementsByTagName('initials')[0].textContent
-						}
-						
-						projects.push(projectRef);						
+						projects.push(projectRef);
 					}
 					callback(true, projects);
 				} else {
@@ -103,51 +91,64 @@ Application['PTApi'] = {
 	syncOnServer: function(hoursMinSecStr, callback) {
 		Application.debug('Syncing time log on server.');
 		try {
-      var userIdentifier = null;
-
-      if (Application.ptSettings.userInitials)
-         userIdentifier = Application.ptSettings.userInitials;
-      else
-         userIdentifier = Application.PTApi.AUT_REF.id;
-
 			var labels = [];
+      var existingLabels = null;
+
 			if (Application.currentElementRef != null) {
 				var lblStr = decodeURI(Application.currentElementRef.attr('pt_labels'));
 				if (lblStr != null) {
 					existingLabels = lblStr.split(',');
 				}
 				
-				// remove existing TL: prefixed label
 				for (var i = 0; i < existingLabels.length; i++) {
 					var lbl = existingLabels[i];
           Application.debug('Label - ' + lbl);
 					if (lbl != null && lbl.length > 0 &&
-              !lbl.toLowerCase().match('^' + userIdentifier + ' spent:') &&
+              !lbl.toLowerCase().match('^' + Application.ptSettings.prefix + ' spent:') &&
               !lbl.match(/^undefined/))
 						labels.push(lbl);
 				}
 				Application.debug(labels);
 			}
 			
-			labels.push(userIdentifier.trim() + ' spent: ' + hoursMinSecStr);
+			labels.push(Application.ptSettings.prefix.trim() + ' spent: ' + hoursMinSecStr);
 			Application.debug(labels);
-			
-			Application.PTApi._call('projects/' + Application.currentProjectId + 
-									'/stories/' + Application.currentStoryId, 
-									function(e) { 
-										if (e.responseText.toString().indexOf('<id>') != -1) {
-											callback(true, 'Syncd with server.');
-										} else {
-											callback(false, 'Failed to sync.');
-										}
-									}, 
-									'PUT', {'Content-type': 'application/xml'}, 
-									'<story><labels>' + labels.join(',') + '</labels></story>'
-									);
+
+      Application.PTApi._call('projects/' + Application.currentProjectId +
+          '/stories/' + Application.currentStoryId,
+          function (e) {
+            if (e.responseText.toString().indexOf('<id>') != -1) {
+              callback(true, 'Syncd with server.');
+            } else {
+              callback(false, 'Failed to sync.');
+            }
+          },
+          'PUT', {'Content-type':'application/xml'},
+          '<story><labels>' + labels.join(',') + '</labels>' +
+              '<current_state>started</current_state></story>'
+      );
 		} catch (e) {
 			Application.debug(e);
 		}
 	},
+
+  updateAttribute: function(field, value, callback) {
+    Application.PTApi._call(
+        'projects/' + Application.currentProjectId +
+        '/stories/' + Application.currentStoryId,
+
+        function (e) {
+          Application.debug(e.responseText);
+          if (e.responseText.toString().indexOf('<id') != -1) {
+            callback(true, 'Updated Successfully!');
+          } else {
+            callback(false, 'Failed to update!');
+          }
+        },
+        'PUT', {'Content-type':'application/xml'},
+        '<story>' + '<' + field + '>' + value + '</' + field + '>' + '</story>'
+    );
+  },
 	
 	_loadXmlToObject: function(el) {
 		var obj = {};

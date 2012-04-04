@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ti:app xmlns:ti="http://ti.appcelerator.org">
     <sdk-version>1.1.0</sdk-version>
-    <guid>dad6ca10-4305-47b0-b4be-d47a48813678</guid>
+    <guid>5013319e-db08-4432-a7e2-476790dda944</guid>
     <!-- These values are edited/maintained by Titanium Developer -->
     <id>com.somewherein.titanium.PTTKeeper</id>
-    <name>PivotalTrackerTimeKeeper</name>
+    <name>PTTKeeper</name>
     <version>1.0</version>
-    <publisher>bijon</publisher>
+    <publisher>hasan</publisher>
     <url>http://www.somewherein.net</url>
-    <description>not specified</description>
+    <description>Pivotal tracker story time tracker.</description>
     <icon>default_app_logo.png</icon>
-    <copyright>2012 by bijon</copyright>
+    <copyright>2012 by nhm tanveer hossain khan</copyright>
     <!-- Window Definition - these values can be edited -->
     <window>
         <id>initial</id>

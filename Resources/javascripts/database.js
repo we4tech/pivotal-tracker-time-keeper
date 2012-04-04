@@ -1,14 +1,17 @@
-Application['Database'] = {
+Application.Database = {
 	Utils : {
 
 	},
 
-	PTUser : function(userName, password) {this.userName = userName, this.password = password;
+	PTUser : function(userName, password, prefix) {
+    this.userName = userName;
+    this.password = password;
+    this.prefix = prefix;
 
 		this.save = function() {
 			var dataDir = Titanium.Filesystem.getApplicationDataDirectory();
 			var configFile = Titanium.Filesystem.getFile(dataDir, '.active-user');
-			configFile.write(this.userName + "|" + this.password);
+			configFile.write(this.userName + "|" + this.password + "|" + this.prefix);
 		}
 	},
 	PTUserUtils : {
@@ -24,6 +27,7 @@ Application['Database'] = {
 					var parts = content.split('|');
 					Application.ptSettings.username = parts[0];
 					Application.ptSettings.password = parts[1];
+					Application.ptSettings.prefix = parts[2];
 				}
 			}
 		}

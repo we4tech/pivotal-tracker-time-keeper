@@ -1,34 +1,38 @@
-Application['Events'] = {
-  lastSync: null,
-  lastRequest: null,
+Application.Events = {
+  lastSync:null,
+  lastRequest:null,
 
-  handleSaveSettings : function(e) {
+  handleSaveSettings:function (e) {
     var username = $('#settings_username').val();
     var password = $('#settings_password').val();
+    var prefix = $('#settings_prefix').val();
 
-    if ((username && username.length > 0) && (password && password.length > 0)) {
-      Application.ptSettings['username'] = username;
-      Application.ptSettings['password'] = password;
+    if ((username && username.length > 0) &&
+        (password && password.length > 0) &&
+        (prefix && prefix.length > 0)) {
+      Application.ptSettings.username = username;
+      Application.ptSettings.password = password;
+      Application.ptSettings.prefix = prefix;
 
       // Store configuration
-      var user = new Application.Database.PTUser(username, password);
+      var user = new Application.Database.PTUser(username, password, prefix);
       user.save();
 
       Application.loadDetailsPage();
     } else {
-      Application.showNotice('Please enter user name and password');
+      Application.Utils.showNotice('Please enter user name and password');
     }
 
     return false;
   },
 
-  handleStartOrStopTimer : function(e) {
+  handleStartOrStopTimer:function (e) {
     var now = new Date();
 
     if (Application.currentTaskTimer == null) {
       if ((Application.lastClickedTime &&
           (now.getTime() - Application.lastClickedTime.getTime()) > 1000) ||
-          (Application.lastClickedTime == null)){
+          (Application.lastClickedTime == null)) {
         Application.Events.startSyncTimer();
       }
     } else {
@@ -40,7 +44,7 @@ Application['Events'] = {
     Application.lastClickedTime = new Date();
   },
 
-  startSyncTimer: function() {
+  startSyncTimer:function () {
     if (Application.currentTaskStartedAt == null)
       Application.currentTaskStartedAt = new Date();
 
@@ -51,7 +55,7 @@ Application['Events'] = {
 
   },
 
-  stopSyncTimer: function() {
+  stopSyncTimer:function () {
     if (Application.currentTaskTimer != null)
       clearInterval(Application.currentTaskTimer);
 
@@ -63,13 +67,13 @@ Application['Events'] = {
           find('.ui-btn-text').text('Start');
   },
 
-  handleTimerTick : function() {
+  handleTimerTick:function () {
     if (Application.timerPanel == null) {
       Application.timerPanel = $('#timer_panel');
     }
 
-    var diffDate = Application.getDateDiffFromNow();
-    var formattedDate = Application.buildFormattedDate(diffDate);
+    var diffDate = Application.Utils.getDateDiffFromNow();
+    var formattedDate = Application.Utils.buildFormattedDate(diffDate);
     Application.timerPanel.html(formattedDate);
 
     Application.Events.syncOnServer(diffDate, formattedDate);
@@ -78,19 +82,23 @@ Application['Events'] = {
       Application.Events.lastSync = diffDate;
   },
 
-  syncOnServer: function(nowDiff, formattedDate) {
+  syncOnServer:function (nowDiff, formattedDate) {
     Application.debug('Requested for sync on server');
 
     try {
       if (Application.Events.lastSync != null) {
-        Application.debug('Last sync time found - ' + Application.Events.lastSync);
+        Application.debug('Last sync time found - ' +
+            Application.Events.lastSync);
 
         var diff = nowDiff.getTime() - Application.Events.lastSync.getTime();
         Application.debug('Diff - ' + diff);
 
-        if (Application.currentProjectId != null && Application.currentStoryId != null && diff > (10 * 60 * 1000)) {
+        if (Application.currentProjectId != null &&
+            Application.currentStoryId != null &&
+            diff > (10 * 60 * 1000)) {
           Application.Events.lastSync = nowDiff;
-          Application.PTApi.syncOnServer(formattedDate, Application.Events.handleSyncResponse);
+          Application.PTApi.syncOnServer(
+              formattedDate, Application.Events.handleSyncResponse);
         }
       }
     } catch (e) {
@@ -98,22 +106,22 @@ Application['Events'] = {
     }
   },
 
-  handleSyncResponse: function(status, msg) {
+  handleSyncResponse:function (status, msg) {
     var now = new Date();
     $('#sync_status').html('Syncd with Pivotal Tracker on ' + now.getHours() +
         ':' + now.getMinutes() + ':' + now.getSeconds());
   },
 
-  handleProjectSelection: function(e) {
+  handleProjectSelection:function (e) {
     var projectId = $(this).val();
     Application.PTApi.ACTIVE_PROJECT_ID = projectId;
     var $stories = $('#stories');
     $stories.html('<option>Loading Stories...</option>');
     $stories.selectmenu('refresh');
 
-    Application.showNotice('Loading Stories...');
-    Application.PTApi.getStories(function(status, stories) {
-      Application.hideNotice();
+    Application.Utils.showNotice('Loading Stories...');
+    Application.PTApi.getStories(function (status, stories) {
+      Application.Utils.hideNotice();
 
       if (status) {
         var html = [];
@@ -139,32 +147,29 @@ Application['Events'] = {
         $stories.html(html.join(' '));
         $stories.selectmenu('refresh');
       } else {
-        Application.showNotice(stories);
+        Application.Utils.showNotice(stories);
       }
     });
   },
 
-  handleStorySelection: function(e) {
+  handleStorySelection:function (e) {
     try {
-      var $option = $(e.target.getElementsByTagName('option')[this.selectedIndex]);
-      var index = Application.PTApi.STATES.indexOf($option.attr('pt_current_state'));
-      var labels = decodeURI($option.attr('pt_labels').toString()).split(',');
+      var $option = $(e.target.
+          getElementsByTagName('option')[this.selectedIndex]);
+      var index = Application.PTApi.STATES.indexOf(
+          $option.attr('pt_current_state'));
+      var labels = decodeURI(
+          $option.attr('pt_labels').toString()).split(',');
 
       Application.currentTaskStartedAt = null;
       Application.currentProjectId = $option.attr('pt_project_id');
       Application.currentStoryId = $option.attr('value');
       Application.currentElementRef = $option;
 
-      var userIdentifier = null;
-
-      if (Application.ptSettings.userInitials)
-         userIdentifier = Application.ptSettings.userInitials;
-      else
-         userIdentifier = Application.PTApi.AUT_REF.id;
-
       if (labels.length > 0) {
         for (var i = 0; i < labels.length; i++) {
-          if (labels[i].toLowerCase().match('^' + userIdentifier + ' spent:')) {
+          if (labels[i].toLowerCase().
+              match('^' + Application.ptSettings.prefix + ' spent:')) {
             var parts = decodeURI(labels[i]).split(/:/);
             var hours = parts[1].trim();
             var minutes = parts[2].trim();
@@ -172,7 +177,8 @@ Application['Events'] = {
             var timestamp = (hours * 60 * 60 * 1000) +
                 (minutes * 60 * 1000) +
                 (seconds * 1000);
-            Application.currentTaskStartedAt = new Date(new Date().getTime() - timestamp);
+            Application.currentTaskStartedAt =
+                new Date(new Date().getTime() - timestamp);
           }
         }
       }
@@ -190,7 +196,8 @@ Application['Events'] = {
       Application.Events.handleTimerTick();
 
       if (index != -1) {
-        $($('#states').find('option')[index]).attr('selected', 'selected');
+        $($('#states').find('option')[index]).
+            attr('selected', 'selected');
         $('#states').selectmenu('refresh');
       }
     } catch (e) {
@@ -198,19 +205,41 @@ Application['Events'] = {
     }
   },
 
-  handleSyncByClick: function(e) {
+  handleSyncByClick:function (e) {
     Application.debug('Sync NOW!');
 
     if (Application.currentTaskStartedAt != null) {
       Application.debug('Requesting for sync');
-      var diffDate = Application.getDateDiffFromNow();
-      var formattedDate = Application.buildFormattedDate(diffDate);
+      var diffDate = Application.Utils.getDateDiffFromNow();
+      var formattedDate = Application.Utils.buildFormattedDate(diffDate);
       Application.PTApi.syncOnServer(
           formattedDate, Application.Events.handleSyncResponse);
     }
   },
 
-  _groupStoriesByState: function(stories) {
+  handleStateChange: function(e) {
+    try {
+      if (Application.currentProjectId && Application.currentStoryId) {
+        var $option = $(e.target.
+            getElementsByTagName('option')[this.selectedIndex]);
+        var state = $option.attr('value');
+
+        Application.Utils.showNotice('Setting state to "' + state + '"');
+        Application.PTApi.updateAttribute('current_state', state, function(status, value) {
+          Application.Utils.showNotice(value);
+          $('option[value="' + Application.currentStoryId + '"]').
+              attr('pt_current_state', state);
+        });
+      } else {
+        alert('You have to select project and story before performing this task.');
+        return false;
+      }
+    } catch (e) {
+      alert(e);
+    }
+  },
+
+  _groupStoriesByState:function (stories) {
     var stateMap = {};
     for (var i = 0; i < stories.length; i++) {
       var story = stories[i];
