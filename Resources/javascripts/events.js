@@ -42,6 +42,7 @@ Application.Events = {
     }
 
     Application.lastClickedTime = new Date();
+    Application.Events._enableButtons();
   },
 
   startSyncTimer:function () {
@@ -95,7 +96,7 @@ Application.Events = {
 
         if (Application.currentProjectId != null &&
             Application.currentStoryId != null &&
-            diff > (10 * 60 * 1000)) {
+            diff > (5 * 60 * 1000)) {
           Application.Events.lastSync = nowDiff;
           Application.PTApi.syncOnServer(
               formattedDate, Application.Events.handleSyncResponse);
@@ -110,6 +111,9 @@ Application.Events = {
     var now = new Date();
     $('#sync_status').html('Syncd with Pivotal Tracker on ' + now.getHours() +
         ':' + now.getMinutes() + ':' + now.getSeconds());
+    $('#btn_sync').removeClass('ui-disabled');
+
+    Application.Utils.systemNotice('Syncd with Pivotal Tracker!');
   },
 
   handleProjectSelection:function (e) {
@@ -200,24 +204,45 @@ Application.Events = {
             attr('selected', 'selected');
         $('#states').selectmenu('refresh');
       }
+
+      // Enable buttons
+      Application.Events._enableButtons();
     } catch (e) {
       Application.debug(e);
     }
   },
 
-  handleSyncByClick:function (e) {
+  BUTTONS : ['#btn_sync', '#btn_finished', '#btn_start_timer'],
+  _enableButtons:function () {
+    for (var i in Application.Events.BUTTONS) {
+      var $button = $(Application.Events.BUTTONS[i]);
+      $button.removeClass('ui-disabled');
+    }
+  },
+
+  handleSyncByClick:function (e, callback, state) {
     Application.debug('Sync NOW!');
 
     if (Application.currentTaskStartedAt != null) {
       Application.debug('Requesting for sync');
       var diffDate = Application.Utils.getDateDiffFromNow();
       var formattedDate = Application.Utils.buildFormattedDate(diffDate);
-      Application.PTApi.syncOnServer(
-          formattedDate, Application.Events.handleSyncResponse);
+      $('#btn_sync').addClass('ui-disabled');
+
+      if (callback == null) {
+        Application.PTApi.syncOnServer(
+            formattedDate, Application.Events.handleSyncResponse, state);
+      } else {
+        Application.PTApi.syncOnServer(
+            formattedDate, function(status, msg) {
+              callback(status, msg);
+              Application.Events.handleSyncResponse(status, msg);
+            }, state);
+      }
     }
   },
 
-  handleStateChange: function(e) {
+  handleStateChange:function (e) {
     try {
       if (Application.currentProjectId && Application.currentStoryId) {
         var $option = $(e.target.
@@ -225,7 +250,7 @@ Application.Events = {
         var state = $option.attr('value');
 
         Application.Utils.showNotice('Setting state to "' + state + '"');
-        Application.PTApi.updateAttribute('current_state', state, function(status, value) {
+        Application.PTApi.updateAttribute('current_state', state, function (status, value) {
           Application.Utils.showNotice(value);
           $('option[value="' + Application.currentStoryId + '"]').
               attr('pt_current_state', state);
@@ -237,6 +262,42 @@ Application.Events = {
     } catch (e) {
       alert(e);
     }
+  },
+
+  handleTaskSetAsFinished: function(e) {
+    if (Application.currentProjectId && Application.currentStoryId &&
+        Application.currentElementRef) {
+      $('#btn_finished').addClass('ui-disabled');
+      Application.Events.stopSyncTimer();
+      Application.Events.handleSyncByClick(e, function(status, msg) {
+        if (!status) {
+          Application.Utils.showNotice(msg);
+          $('#btn_finished').removeClass('ui-disabled');
+        } else {
+          Application.currentElementRef.attr('pt_current_state', 'finished');
+        }
+      }, 'finished');
+    }
+  },
+
+  handleRefreshPage: function(e) {
+    if (Application.currentProjectId && Application.currentStoryId) {
+      Application.Events.stopSyncTimer();
+    }
+
+    Application.loadProjects()
+        .then(function() {
+          var $stories = $('#stories');
+          $stories.html('<option>Select project</option>');
+          $('#projects, #stories').selectmenu('refresh');
+        });
+
+  },
+
+  handleExit: function(e) {
+    Application.Events.handleSyncByClick(e);
+    Application.exitable = true;
+    Titanium.App.exit();
   },
 
   _groupStoriesByState:function (stories) {

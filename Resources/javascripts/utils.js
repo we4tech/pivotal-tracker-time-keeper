@@ -30,5 +30,13 @@ Application.Utils = {
 
   hideNotice:function () {
     $.mobile.hidePageLoadingMsg();
+  },
+
+  systemNotice: function(msg) {
+    var notification = Titanium.Notification.createNotification();
+    notification.setMessage(msg);
+    notification.setTitle('Time Keeper Notice');
+    notification.setTimeout(-1);
+    notification.show();
   }
 };

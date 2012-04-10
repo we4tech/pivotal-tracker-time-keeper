@@ -88,11 +88,12 @@ Application.PTApi = {
 		}
 	},
 	
-	syncOnServer: function(hoursMinSecStr, callback) {
+	syncOnServer: function(hoursMinSecStr, callback, state) {
 		Application.debug('Syncing time log on server.');
 		try {
 			var labels = [];
       var existingLabels = null;
+      state = state || 'started';
 
 			if (Application.currentElementRef != null) {
 				var lblStr = decodeURI(Application.currentElementRef.attr('pt_labels'));
@@ -117,15 +118,21 @@ Application.PTApi = {
       Application.PTApi._call('projects/' + Application.currentProjectId +
           '/stories/' + Application.currentStoryId,
           function (e) {
-            if (e.responseText.toString().indexOf('<id>') != -1) {
+            if (e.responseText.toString().indexOf('<id') != -1) {
               callback(true, 'Syncd with server.');
+
+              if (Application.currentElementRef != null) {
+                Application.currentElementRef.
+                    attr('pt_labels', encodeURI(labels.join(','))).
+                    attr('pt_current_state', state);
+              }
             } else {
               callback(false, 'Failed to sync.');
             }
           },
           'PUT', {'Content-type':'application/xml'},
           '<story><labels>' + labels.join(',') + '</labels>' +
-              '<current_state>started</current_state></story>'
+              '<current_state>' + state + '</current_state></story>'
       );
 		} catch (e) {
 			Application.debug(e);
@@ -180,11 +187,11 @@ Application.PTApi = {
 			if (e.readyState == e.DONE) {
 				callback(e);	
 			}
-		}
+		};
 		
 		client.onerror = function(e) {
 			return null;
-		}
+		};
 		
 		client.open((httpMethod || 'GET'), Application.PTApi.URI + method, true, 
 					Application.ptSettings.username, 

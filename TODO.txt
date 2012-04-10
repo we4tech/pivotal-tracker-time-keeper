@@ -1,0 +1,7 @@
+[DONE] 1. Finished button next to start button
+[DONE] 2. Hide state changing combo box
+[DONE] 3. Set application icon
+5. On exit it should sync unsyncd timer
+6. Fix timer pause and later continue related issue
+[DONE] 7. Implement refresh button
+8. Add on system menu

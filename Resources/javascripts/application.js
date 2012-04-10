@@ -7,16 +7,41 @@ var Application = {
   currentTaskTimer:null,
   timerPanel:null,
   lastClickedTime:null,
+  exitable: false,
 
   init:function () {
     try {
+      Application.makeDraggable();
+      Application.addOnTray();
       Application.Utils.loadExistingSettings();
-      Application.addEventsObservers()
-      Application.loadStates();
+      Application.addEventsObservers();
       Application.determineFirstPage();
     } catch (e) {
       alert(e);
     }
+  },
+
+  makeDraggable:function () {
+    Application.dragging = false;
+
+    $(document).bind('mousemove', function () {
+      if (!Application.dragging)
+        return;
+
+      Titanium.UI.currentWindow.setX(Titanium.UI.currentWindow.getX() + event.clientX - Application.xstart);
+      Titanium.UI.currentWindow.setY(Titanium.UI.currentWindow.getY() + event.clientY - Application.ystart);
+
+    });
+
+    $(document).bind('mousedown', function () {
+      Application.dragging = true;
+      Application.xstart = event.clientX;
+      Application.ystart = event.clientY;
+    });
+
+    $(document).bind('mouseup', function () {
+      Application.dragging = false;
+    });
   },
 
   loadStates:function () {
@@ -35,15 +60,7 @@ var Application = {
       if (status) {
         Application.debug("User token found - " + tokenRef.guid);
         Application.Utils.showNotice('Loading projects...');
-        Application.PTApi.getProjects(function (status, projects) {
-          if (status) {
-            Application.Utils.hideNotice();
-            Application.loadProjects(projects);
-            $.mobile.changePage("#home_page");
-          } else {
-            Application.Utils.showNotice(projects);
-          }
-        });
+        Application.loadProjects();
       } else {
         if (Application.PTApi.AUT_REF == null)
           Application.Utils.showNotice('Please enter valid user & password.');
@@ -51,7 +68,24 @@ var Application = {
     });
   },
 
-  loadProjects:function (projects) {
+  loadProjects:function () {
+    var dfr = $.Deferred();
+    Application.PTApi.getProjects(function (status, projects) {
+      if (status) {
+        Application.Utils.hideNotice();
+        Application._loadProjectsElements(projects);
+        $.mobile.changePage("#home_page");
+        dfr.resolve();
+      } else {
+        Application.Utils.showNotice(projects);
+        dfr.reject();
+      }
+    });
+
+    return dfr.promise();
+  },
+
+  _loadProjectsElements:function (projects) {
     var projectEl = $('#projects');
     var html = [];
     html.push("<option>Select Project</option>");
@@ -85,16 +119,63 @@ var Application = {
       $('#projects').bind('change', Application.Events.handleProjectSelection);
       $('#stories').bind('change', Application.Events.handleStorySelection);
       $('#btn_sync').bind('click', Application.Events.handleSyncByClick);
-      $('#states').bind('change', Application.Events.handleStateChange);
+      $('#btn_finished').click(Application.Events.handleTaskSetAsFinished);
+      $('#btn_refresh').click(Application.Events.handleRefreshPage);
+
+      Titanium.API.addEventListener(Titanium.EXIT, function (event) {
+        if (!Application.exitable) {
+          event.stopPropagation();
+          Titanium.UI.getCurrentWindow().hide();
+        }
+      });
+
       Application.eventsObserversInitiated = true;
     }
   },
 
-  debug:function (msg) {
-    if (typeof (console) != null) {
-      console.log(msg);
+  addOnTray:function () {
+    try {
+      var sysMenu = Titanium.UI.createMenu();
+
+      var toggleView = Application.stopTimer = Titanium.UI.createMenuItem(
+          'Show / Hide', function () {
+            if (Titanium.UI.getCurrentWindow().isVisible())
+              Titanium.UI.getCurrentWindow().hide();
+            else
+              Titanium.UI.getCurrentWindow().show();
+          });
+
+      var stopTimer = Application.stopTimer = Titanium.UI.createMenuItem(
+          'Stop Timer', Application.Events.handleStartOrStopTimer);
+      stopTimer.disable();
+
+      var startTimer = Application.startTimer = Titanium.UI.createMenuItem(
+          'Start Timer', Application.Events.handleStartOrStopTimer);
+      startTimer.disable();
+
+      var syncTimer = Application.syncTimer = Titanium.UI.createMenuItem(
+          'Sync with PT', Application.Events.handleSyncByClick);
+      syncTimer.disable();
+
+      var exit = Titanium.UI.createMenuItem('Exit', Application.Events.handleExit);
+
+      sysMenu.appendItem(stopTimer);
+      sysMenu.appendItem(startTimer);
+      sysMenu.appendItem(syncTimer);
+      sysMenu.addSeparatorItem();
+      sysMenu.appendItem(exit);
+
+      var tray = Application.sysTray = Titanium.UI.addTray("app://icons/logo_small.png");
+      tray.setMenu(sysMenu);
+    } catch (e) {
+      Application.debug(e);
     }
+  },
+
+  debug:function (msg) {
+    if (typeof (console) != 'undefined')
+      console.log(msg);
   }
 };
 
-$(document).bind('pageinit', Application.init);
+$(document).ready(Application.init);
