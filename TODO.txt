@@ -1,0 +1,13 @@
+[DONE] 1. Finished button next to start button
+[DONE] 2. Hide state changing combo box
+[DONE] 3. Set application icon
+[DONE] 5. On exit it should sync unsyncd timer
+[DONE] 7. Implement refresh button
+[DONE] 8. Add on system menu
+[DONE] 6. Fix timer pause and later continue related issue
+[DONE] 12. Add manual entry option
+
+9. Hide back button on the first run
+10. Order story list - started, unstarted, unscheduled, finished
+11. Replace combo box with list view
+

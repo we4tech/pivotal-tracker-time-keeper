@@ -1,4 +1,5 @@
 dist
 .project
 .DS_Store
+.idea
 

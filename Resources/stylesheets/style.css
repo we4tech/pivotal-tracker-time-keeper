@@ -1,19 +1,35 @@
 .timer {
-	font-size: 40px;
-	margin-top: 20px;
-	margin-bottom: 20px;
-	color: #fff;
-	text-align: center;
-	padding: 5px;
-	background: #ccc;
-	-webkit-border-radius: 10px;
-	-moz-border-radius: 10px;
-	border-radius: 10px;
-	border: 1px dashed #ccc;
-	text-shadow: 1px 1px 5px #000000;
-	filter: dropshadow(color=#000000, offx=1, offy=1); 
+  font-size: 40px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  color: #fff;
+  text-align: center;
+  padding: 5px;
+  background: #ccc;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  border: 1px dashed #ccc;
+  text-shadow: 1px 1px 5px #000000;
+  filter: dropshadow(color = #000000, offx = 1, offy = 1);
+}
+
+.timer .in-place-editor-tf {
+  width: 100%;
+  height: 100%;
+  font-size: 40px;
+  text-align: center;
 }
 
 #sync_status {
-	
+
+}
+
+.ui-header {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }

@@ -1,91 +1,118 @@
 <html>
-	<head>
-		<link type="text/css" href="javascripts/jquery-mobile/jquery.mobile-1.0.1.css" rel="Stylesheet" />
-		<link type="text/css" href="stylesheets/style.css" rel="Stylesheet" />	
-		<script type="text/javascript" src="javascripts/jquery-mobile/jquery-1.7.1.min.js"></script>
-		<script type="text/javascript" src="javascripts/jquery-mobile/jquery.mobile-1.0.1.js"></script>
-		<script type="text/javascript" src="javascripts/core_ext.js"></script>
-		<script type="text/javascript" src="javascripts/application.js"></script>
-		<script type="text/javascript" src="javascripts/events.js"></script>
-		<script type="text/javascript" src="javascripts/pt_api.js"></script>
-		<script type="text/javascript" src="javascripts/database.js"></script>
-		
-		<title>PivotalTracker - Time Keeper</title>
-	</head>
-	
-	<body>
-		<div data-role='page' id='settings_page' data-transitions='fade'>
-			<div data-role="header">
-				<h1>Login to Pivotal Tracker</h1>
-				<a href='javascript:void(0);' data-rel="back" data-role='button' data-icon='back'>Back</a>
-			</div> 
-			
-			<div data-role="content">
-				<h3>Configure <acronym title="Pivotal Tracker">PT</acronym> Credentials</h3>
-				<ul data-role='listview' data-theme='b' data-inset='true'>
-					<li>
-						<input type='text' placeholder="User Name" id='settings_username' name='username' data-mini="true"/>
-					</li>
-					<li>
-						<input type='password' placeholder="Password" id='settings_password' name="password" data-mini="true" />
-					</li>
-					<li>
-						<input type='button' value="Save and Login" data-mini="true" id='btn_save_settings'/>
-					</li>
-				</ul>
-			</div> 
-			<div data-role="footer" data-position="fixed">
-				<h5>
-					Brought to you by <a href='http://www.somewherein.net'>Somewhere in... ruby devs</a>
-				</h5>
-			</div>
-		</div>
-		
-		<div data-role='page' id='home_page' data-transitions='fade'>
-			<div data-role='header'>
-				<h1>Time Keeper</h1>
-				<a href='#settings_page' data-role='button' data-icon='gear'>Settings</a>
-				<a href='#refresh_page' data-role='button' data-icon='refresh'>Refresh</a>
-			</div>
-			<div class='ui-bar ui-bar-b'>
-				<h3 id='sync_status'>
-					Not yet sync with server.
-				</h3>
-			</div>
-			
-			<div data-role='content'>
-				<select id='projects'>
-					<option value=''>Loading projects...</option>
-				</select>
-				<select id='stories'>
-					<option value=''>Select project</option>
-				</select>
-				<div id="current-story"></div>
-				
-				<div class='timer' id="timer_panel" data-corner='round'>
-					00:00:00
-				</div>
-				
-				<fieldset class="ui-grid-a">
-          <div class='ui-block-a'>
-            <a href='javascript:void(0);' data-role='button' data-theme='a' id='btn_sync'>Sync</a>
-          </div>
-					<div class="ui-block-b">
-						<a href='javascript:void(0);' data-role='button' data-theme="b" id='btn_start_timer'>Start</a>
-					</div>	   
-				</fieldset>
+<head>
+  <link type="text/css" href="javascripts/jquery-mobile/jquery.mobile-1.0.1.css"
+        rel="Stylesheet"/>
+  <link type="text/css" href="stylesheets/style.css" rel="Stylesheet"/>
+  <script type="text/javascript"
+          src="javascripts/jquery-mobile/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript"
+          src="javascripts/jquery-mobile/jquery.mobile-1.0.1.js"></script>
+  <script type="text/javascript" src="javascripts/core_ext.js"></script>
+  <script type="text/javascript" src="javascripts/application.js"></script>
+  <script type="text/javascript" src="javascripts/modules.js"></script>
+  <script type="text/javascript" src="javascripts/utils.js"></script>
+  <script type="text/javascript" src="javascripts/events.js"></script>
+  <script type="text/javascript" src="javascripts/pt_api.js"></script>
+  <script type="text/javascript" src="javascripts/database.js"></script>
 
-        <select id='states'>
-          <option>Not loaded...</option>
-        </select>
+  <title>PivotalTracker - Time Keeper</title>
+</head>
 
-			</div>
-			
-			<div data-role='footer' data-position="fixed">
-				<h5>
-					Brought to you by <a href='http://www.somewherein.net'>Somewhere in... ruby devs</a>
-				</h5>
-			</div>
-		</div> 
-	</body>
+<body>
+<div data-role='page' id='settings_page' data-transitions='fade'>
+  <div data-role="header">
+    <h1>Login to Pivotal Tracker</h1>
+    <a href='javascript:void(0);' data-rel="back" data-role='button'
+       data-icon='back'>Back</a>
+  </div>
+
+  <div data-role="content">
+    <ul data-role='listview' data-theme='b' data-inset='true'>
+      <li data-role="list-divider">Login to Pivotal Tracker</li>
+      <li>
+        <input type='text' placeholder="User Name" id='settings_username'
+               name='username' data-mini="true"/>
+      </li>
+      <li>
+        <input type='password' placeholder="Password" id='settings_password'
+               name="password" data-mini="true"/>
+      </li>
+      <li>
+        <input type='text' placeholder="Friendly short name (ie. nafi)"
+               id='settings_prefix' name="prefix" data-mini="true"/>
+      </li>
+      <li>
+        <input type='button' value="Save and Login" data-mini="true"
+               id='btn_save_settings'/>
+      </li>
+    </ul>
+  </div>
+  <div data-role="footer" data-position="fixed">
+    <h5>
+      Brought to you by <a href='http://www.somewherein.net'>Somewhere in...
+      ruby devs</a>
+    </h5>
+  </div>
+</div>
+
+<div data-role='page' id='home_page' data-transitions='fade'>
+  <div data-role='header'>
+    <h1>Time Keeper</h1>
+    <a href='#settings_page' data-role='button' data-icon='gear'>Settings</a>
+    <a href='javascript:void(0)' id='btn_refresh' data-role='button' data-icon='refresh'>Refresh</a>
+  </div>
+  <div class='ui-bar ui-bar-b'>
+    <h3 id='sync_status'>
+      Not yet sync with server.
+    </h3>
+  </div>
+
+  <div data-role='content'>
+    <select id='projects'>
+      <option value=''>Loading projects...</option>
+    </select>
+
+    <select id='stories'>
+      <option value=''>Select project</option>
+    </select>
+
+    <div id="current-story"></div>
+
+    <div class='timer' id="timer_panel" data-corner='round'>
+      00:00:00
+    </div>
+
+    <!--select id='states' style='display:none;'>
+      <option>Not loaded...</option>
+    </select-->
+
+    <fieldset class="ui-grid-a">
+      <div class='ui-block-a'>
+        <a href='javascript:void(0);'
+           class="ui-disabled" data-role='button'
+           title="Set as finished" data-icon='check'
+           data-theme='e' id='btn_finished'>Finished</a>
+      </div>
+      <div class="ui-block-b">
+        <a href='javascript:void(0);' class="ui-disabled" data-role='button'
+           data-theme="b"
+           id='btn_start_timer'>Start</a>
+      </div>
+    </fieldset>
+
+    <a href='javascript:void(0);'
+       class="ui-disabled"
+       data-role='button' data-theme='c'
+       id='btn_sync'>Sync</a>
+
+  </div>
+
+  <div data-role='footer' data-position="fixed">
+    <h5>
+      Brought to you by <a href='http://www.somewherein.net'>Somewhere in...
+      ruby devs</a>
+    </h5>
+  </div>
+</div>
+</body>
 </html>
