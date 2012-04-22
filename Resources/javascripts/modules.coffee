@@ -44,3 +44,4 @@ class App.Modules.InPlaceEditor
     '<input type="text" value="' + @existing_value.trim() +
     '" class="in-place-editor-tf"/>'
 
+

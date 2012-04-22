@@ -229,3 +229,4 @@ App = Application = {
 };
 
 $(document).ready(Application.init);
+

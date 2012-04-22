@@ -55,3 +55,4 @@
     return InPlaceEditor;
   })();
 }).call(this);
+
